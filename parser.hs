@@ -29,6 +29,7 @@ jObject =
     char ':'
     skipSpaces
     value <- jValue
+    skipSpaces
     char '}'
     pure (JObject [(key, value)])
 
@@ -47,14 +48,14 @@ data TAction = LEFT | RIGHT deriving (Enum)
 
 data TTrans = TTrans
   { toState :: String,
-    write :: Char,
+    write :: String,
     action :: TAction
   }
 
 data TDesc = TDesc
   { name :: String,
-    alphabet :: [Char],
-    blank :: Char,
+    alphabet :: [String],
+    blank :: String,
     states :: [String],
     initial :: String,
     finals :: [String],
@@ -80,6 +81,14 @@ extractArray = \case
   JArray x -> Just x
   _ -> Nothing
 
+combine :: [Maybe a] -> Maybe [a]
+combine [] = Just []
+combine (x : xs) = case x of
+  Nothing -> Nothing
+  Just x' -> case combine xs of
+    Nothing -> Nothing
+    Just xs' -> Just (x' : xs')
+
 searchString :: String -> [(String, JValue)] -> Maybe String
 searchString key xs = searchValue key xs >>= extractString
 
@@ -91,19 +100,24 @@ jValueToTDesc jvalue =
   do
     name <- searchString "name" jvalue
     alphabet <- searchArray "alphabet" jvalue
+    alphabet' <- combine $ extractString <$> alphabet
     blank <- searchString "blank" jvalue
-    states <- searchString "states" jvalue
+    states <- searchArray "states" jvalue
+    states' <- combine $ extractString <$> states
     initial <- searchString "initial" jvalue
-    finals <- extractString <$> searchArray "finals" jvalue
-    transitions <- Map.fromList (zip states (jValueToTransition jvalue <$> states))
+    finals <- searchArray "finals" jvalue
+    finals' <- combine $ extractString <$> finals
+    transitions <- searchValue "transitions" jvalue
+    transitions' <- combine $ jValueToTransition transitions <$> states'
+    transitions'' <- Just $ Map.fromList $ zip states' transitions'
     pure TDesc {
       name=name,
-      alphabet=alphabet,
+      alphabet=alphabet',
       blank=blank,
-      states=states,
+      states=states',
       initial=initial,
-      finals=finals,
-      transitions=transitions
+      finals=finals',
+      transitions=transitions''
     }
 
 stringToTAction :: String -> Maybe TAction
@@ -112,27 +126,30 @@ stringToTAction str
   | str == "RIGHT" = Just LEFT
   | otherwise = Nothing
 
-jValueToTTrans :: JValue -> Maybe TTrans
-jValueToTTrans jvalue =
+jValueToTTrans :: JValue -> Maybe (String, TTrans)
+jValueToTTrans (JObject jvalue) =
   do
     read <- searchString "read" jvalue
     toState <- searchString "to_state" jvalue
     write <- searchString "write" jvalue
-    action <- searchString "action" >>= \x -> stringToTAction x
+    action <- searchString "action" jvalue 
+    action' <- stringToTAction action
     pure (read, TTrans {
       toState=toState,
       write=write,
-      action=action
+      action=action'
     })
 
-jValueToTransition :: JValue -> String -> Map.Map String TTrans
-jValueToTransition jvalue key = Map.fromList (jValueToTTrans <$> searchArray key jvalue)
+jValueToTTrans _ = Nothing
 
--- (state, tape) ==> 
--- 
+jValueToTransition :: JValue -> String -> Maybe (Map.Map String TTrans)
+jValueToTransition (JObject jvalue) key =
+  do
+    arr <- searchArray key jvalue
+    transition <- combine $ jValueToTTrans <$> arr
+    pure $ Map.fromList transition
 
-
-
+jValueToTransition _ _ = Nothing
 -- parseIntoTDesc :: String -> Maybe TDesc
 -- parseIntoTDesc xs = 
 --   case json ofg
