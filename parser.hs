@@ -1,8 +1,15 @@
 {-# LANGUAGE LambdaCase #-}
 
-import Data.Char (isAlpha, isAlphaNum, isDigit, ord)
+module Parser where
+
+import Data.Char (isAlpha, isAlphaNum, isDigit, ord, isPrint)
 import qualified Data.Map.Strict as Map
 import Text.ParserCombinators.ReadP
+import Data.List
+
+unwrap s = case parsed of
+  [(JObject json, "")] -> json
+  where parsed = parse s
 
 parse = readP_to_S jValue
 
@@ -15,14 +22,12 @@ jString :: ReadP JValue
 jString =
   do
     skipSpaces
-    str <- between (char '"') (char '"') (many1 $ satisfy isAlphaNum)
+    str <- between (char '"') (char '"') (many1 $ satisfy (\x -> isPrint x && (x /= '"')))
     pure (JString str)
 
-jObject :: ReadP JValue
-jObject =
+jKeyValue :: ReadP (String, JValue)
+jKeyValue =
   do
-    skipSpaces
-    char '{'
     skipSpaces
     (JString key) <- jString
     skipSpaces
@@ -30,8 +35,18 @@ jObject =
     skipSpaces
     value <- jValue
     skipSpaces
+    pure (key, value)
+
+jObject :: ReadP JValue
+jObject =
+  do
+    skipSpaces
+    char '{'
+    skipSpaces
+    kv <- sepBy jKeyValue (char ',')
+    skipSpaces
     char '}'
-    pure (JObject [(key, value)])
+    pure (JObject kv)
 
 jArray :: ReadP JValue
 jArray =
@@ -39,18 +54,18 @@ jArray =
     skipSpaces
     char '['
     skipSpaces
-    value <- jValue
+    value <- sepBy jValue $ char ','
     skipSpaces
     char ']'
-    pure value
+    pure (JArray value)
 
-data TAction = LEFT | RIGHT deriving (Enum)
+data TAction = LEFT | RIGHT deriving (Enum, Show)
 
 data TTrans = TTrans
   { toState :: String,
     write :: String,
     action :: TAction
-  }
+  } deriving (Show)
 
 data TDesc = TDesc
   { name :: String,
@@ -60,7 +75,7 @@ data TDesc = TDesc
     initial :: String,
     finals :: [String],
     transitions :: Map.Map String (Map.Map String TTrans)
-  }
+  } deriving (Show)
 
 searchValue :: String -> [(String, JValue)] -> Maybe JValue
 searchValue _ [] = Nothing
@@ -108,7 +123,7 @@ jValueToTDesc jvalue =
     finals <- searchArray "finals" jvalue
     finals' <- combine $ extractString <$> finals
     transitions <- searchValue "transitions" jvalue
-    transitions' <- combine $ jValueToTransition transitions <$> states'
+    transitions' <- combine $ jValueToTransition transitions <$> (states' \\ finals')
     transitions'' <- Just $ Map.fromList $ zip states' transitions'
     pure TDesc {
       name=name,
@@ -123,7 +138,7 @@ jValueToTDesc jvalue =
 stringToTAction :: String -> Maybe TAction
 stringToTAction str
   | str == "LEFT" = Just LEFT
-  | str == "RIGHT" = Just LEFT
+  | str == "RIGHT" = Just RIGHT
   | otherwise = Nothing
 
 jValueToTTrans :: JValue -> Maybe (String, TTrans)
@@ -132,7 +147,7 @@ jValueToTTrans (JObject jvalue) =
     read <- searchString "read" jvalue
     toState <- searchString "to_state" jvalue
     write <- searchString "write" jvalue
-    action <- searchString "action" jvalue 
+    action <- searchString "action" jvalue
     action' <- stringToTAction action
     pure (read, TTrans {
       toState=toState,
