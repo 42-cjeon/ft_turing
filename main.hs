@@ -1,6 +1,7 @@
 import System.IO
 import System.Environment
 import Parser (parse, jValueToTDesc, JValue(JObject), jValue)
+import Turing (runTM)
 
 parseToTDesc s = case parsed of
   [(JObject json, "")] -> jValueToTDesc json
@@ -17,4 +18,6 @@ main =
   do
     args <- getArgs
     s <- readFile $ head args
-    print (parseToTDesc s)
+    case parseToTDesc s of
+      Nothing -> error "failed to parse"
+      Just x -> runTM x "111-11="

@@ -82,9 +82,8 @@ searchValue _ [] = Nothing
 searchValue toFind xs = case xs of
   ((key, value) : rest) ->
     if key == toFind
-      then Just value
-      else searchValue toFind rest
-  _ -> Nothing
+    then Just value
+    else searchValue toFind rest
 
 extractString :: JValue -> Maybe String
 extractString = \case
