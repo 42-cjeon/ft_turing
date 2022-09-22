@@ -20,4 +20,4 @@ main =
     s <- readFile $ head args
     case parseToTDesc s of
       Nothing -> error "failed to parse"
-      Just x -> runTM x "111-11="
+      Just x -> runTM x (args !! 1)
