@@ -1,0 +1,41 @@
+input: '00000'
+blank: '.'
+start state: move_right
+table:
+  start_move_right:
+    0: {write: z, R: move_right}
+    z: {L: move_left_reject}
+
+  move_right:
+    0: R
+    [., z]: { L: check_is_zero }
+
+  check_is_zero:
+    0: {write: z, L: move_left}
+    z: {R: move_left_accept}
+
+  move_left:
+    0: L
+    [., z]: { R: start_move_right }
+
+  move_left_accept:
+    [0, z]: L
+    .: {R: restore_value_accept}
+  
+  move_left_reject:
+    [0, z]: L
+    .: {R: restore_value_reject}
+
+  restore_value_accept:
+    z: {write: 0, R: restore_value_accept}
+    0: R
+    .: {write: y, R: accept}
+
+  restore_value_reject:
+    z: {write: 0, R: restore_value_reject}
+    0: R
+    .: {write: n, R: reject}
+
+  reject:
+
+  accept:

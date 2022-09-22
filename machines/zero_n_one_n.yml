@@ -1,0 +1,74 @@
+input: '1100'
+blank: '.'
+start state: check_move_right
+table:
+  check_move_right:
+    0: {write: z, R: check_move_right_expect_one}
+    1: {L: move_to_start_reject}
+    z: {L: move_to_start_accept}
+    o: {L: move_to_start_accept}
+
+  move_left:
+    0: L
+    1: L
+    z: {write: z, R: check_move_right}
+    o: {write: o, R: check_move_right}
+    .: {write: ., R: check_move_right}
+
+  check_move_right_expect_zero:
+    0: R
+    1: R
+    z: {L: check_is_zero}
+    o: {L: check_is_zero}
+    .: {L: check_is_zero}
+
+  check_move_right_expect_one:
+    0: R
+    1: R
+    z: {L: check_is_one}
+    o: {L: check_is_one}
+    .: {L: check_is_one}
+
+  check_is_zero:
+    0: {write: z, L: move_left}
+    z: {write: z, L: move_to_start_reject}
+    o: {write: o, L: move_to_start_reject}
+    1: {L: move_to_start_reject} 
+
+  check_is_one:
+    1: {write: o, L: move_left}
+    z: {write: z, L: move_to_start_reject}
+    o: {write: o, L: move_to_start_reject}
+    0: {L: move_to_start_reject}
+
+  move_to_start_accept:
+    1: L
+    0: L
+    z: L
+    o: L
+    .: {R: restore_value_accept}
+  
+  move_to_start_reject:
+    1: L
+    0: L
+    z: L
+    o: L
+    .: {R: restore_value_reject}
+
+  restore_value_accept:
+    1: R
+    0: R
+    z: {write: 0, R: restore_value_accept}
+    o: {write: 1, R: restore_value_accept}
+    .: {write: y, R: accept}
+
+  restore_value_reject:
+    1: R
+    0: R
+    z: {write: 0, R: restore_value_reject}
+    o: {write: 1, R: restore_value_reject}
+    .: {write: n, R: reject}
+
+  reject:
+
+  accept:
