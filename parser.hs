@@ -23,6 +23,7 @@ jString =
   do
     skipSpaces
     str <- between (char '"') (char '"') (many1 $ satisfy (\x -> isPrint x && (x /= '"')))
+    skipSpaces
     pure (JString str)
 
 jKeyValue :: ReadP (String, JValue)
@@ -46,6 +47,7 @@ jObject =
     kv <- sepBy jKeyValue (char ',')
     skipSpaces
     char '}'
+    skipSpaces
     pure (JObject kv)
 
 jArray :: ReadP JValue
@@ -57,6 +59,7 @@ jArray =
     value <- sepBy jValue $ char ','
     skipSpaces
     char ']'
+    skipSpaces
     pure (JArray value)
 
 data TAction = LEFT | RIGHT deriving (Enum, Show)
