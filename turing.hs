@@ -21,11 +21,12 @@ runTMRec desc tape state index =
   where
     len = length tape
     transMap = case Map.lookup state $ transitions desc of
-      Nothing -> error "HALT : unknown state detected"
+
+      Nothing -> error ("HALT : unknown state=" ++ state ++ " detected")
       Just transMap' -> transMap'
     value = [tape !! index]
     func = case Map.lookup value transMap of
-      Nothing -> error "HALT : unknown (tape_value, state) pair detected"
+      Nothing -> error ("HALT : unknown (tape_value=" ++ value ++ ", state=" ++ state ++ ") pair detected")
       Just func' -> func'
     tape' = replaceNth index (head (write func)) tape
     nextIndex = case action func of
