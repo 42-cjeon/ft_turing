@@ -1,0 +1,175 @@
+{
+  "name": "zero_2n",
+  "alphabet": [
+    "0",
+    "."
+  ],
+  "blank": ".",
+  "states": [
+    "start_move_right",
+    "move_right",
+    "check_is_zero",
+    "move_left",
+    "move_left_accept",
+    "move_left_reject",
+    "restore_value_accept",
+    "restore_value_reject",
+    "reject",
+    "accept"
+  ],
+  "initial": "move_right",
+  "finals": [
+    "reject",
+    "accept"
+  ],
+  "transitions": {
+    "start_move_right": [
+      {
+        "read": "0",
+        "to_state": "move_right",
+        "write": "z",
+        "action": "RIGHT"
+      },
+      {
+        "read": "z",
+        "to_state": "move_left_reject",
+        "write": "z",
+        "action": "LEFT"
+      }
+    ],
+    "move_right": [
+      {
+        "read": "0",
+        "to_state": "move_right",
+        "write": "0",
+        "action": "RIGHT"
+      },
+      {
+        "read": ".",
+        "to_state": "check_is_zero",
+        "write": ".",
+        "action": "LEFT"
+      },
+      {
+        "read": "z",
+        "to_state": "check_is_zero",
+        "write": "z",
+        "action": "LEFT"
+      }
+    ],
+    "check_is_zero": [
+      {
+        "read": "0",
+        "to_state": "move_left",
+        "write": "z",
+        "action": "LEFT"
+      },
+      {
+        "read": "z",
+        "to_state": "move_left_accept",
+        "write": "z",
+        "action": "RIGHT"
+      }
+    ],
+    "move_left": [
+      {
+        "read": "0",
+        "to_state": "move_left",
+        "write": "0",
+        "action": "LEFT"
+      },
+      {
+        "read": ".",
+        "to_state": "start_move_right",
+        "write": ".",
+        "action": "RIGHT"
+      },
+      {
+        "read": "z",
+        "to_state": "start_move_right",
+        "write": "z",
+        "action": "RIGHT"
+      }
+    ],
+    "move_left_accept": [
+      {
+        "read": "0",
+        "to_state": "move_left_accept",
+        "write": "0",
+        "action": "LEFT"
+      },
+      {
+        "read": "z",
+        "to_state": "move_left_accept",
+        "write": "z",
+        "action": "LEFT"
+      },
+      {
+        "read": ".",
+        "to_state": "restore_value_accept",
+        "write": ".",
+        "action": "RIGHT"
+      }
+    ],
+    "move_left_reject": [
+      {
+        "read": "0",
+        "to_state": "move_left_reject",
+        "write": "0",
+        "action": "LEFT"
+      },
+      {
+        "read": "z",
+        "to_state": "move_left_reject",
+        "write": "z",
+        "action": "LEFT"
+      },
+      {
+        "read": ".",
+        "to_state": "restore_value_reject",
+        "write": ".",
+        "action": "RIGHT"
+      }
+    ],
+    "restore_value_accept": [
+      {
+        "read": "z",
+        "to_state": "restore_value_accept",
+        "write": "0",
+        "action": "RIGHT"
+      },
+      {
+        "read": "0",
+        "to_state": "restore_value_accept",
+        "write": "0",
+        "action": "RIGHT"
+      },
+      {
+        "read": ".",
+        "to_state": "accept",
+        "write": "y",
+        "action": "RIGHT"
+      }
+    ],
+    "restore_value_reject": [
+      {
+        "read": "z",
+        "to_state": "restore_value_reject",
+        "write": "0",
+        "action": "RIGHT"
+      },
+      {
+        "read": "0",
+        "to_state": "restore_value_reject",
+        "write": "0",
+        "action": "RIGHT"
+      },
+      {
+        "read": ".",
+        "to_state": "reject",
+        "write": "n",
+        "action": "RIGHT"
+      }
+    ]
+  }
+}

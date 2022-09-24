@@ -8,7 +8,7 @@ table:
 
   move_right:
     0: R
-    [., z]: { L: check_is_zero }
+    ['.', 'z']: { L: check_is_zero }
 
   check_is_zero:
     0: {write: z, L: move_left}
@@ -16,14 +16,14 @@ table:
 
   move_left:
     0: L
-    [., z]: { R: start_move_right }
+    ['.', 'z']: { R: start_move_right }
 
   move_left_accept:
-    [0, z]: L
+    ['0', 'z']: L
     .: {R: restore_value_accept}
   
   move_left_reject:
-    [0, z]: L
+    ['0', 'z']: L
     .: {R: restore_value_reject}
 
   restore_value_accept:
