@@ -7,10 +7,6 @@ import qualified Data.Map.Strict as Map
 import Text.ParserCombinators.ReadP
 import Data.List
 
-unwrap s = case parsed of
-  [(JObject json, "")] -> json
-  where parsed = parse s
-
 parse = readP_to_S jValue
 
 data JValue = JObject [(String, JValue)] | JArray [JValue] | JString String deriving (Show)
@@ -81,12 +77,12 @@ data TDesc = TDesc
   } deriving (Show)
 
 searchValue :: String -> [(String, JValue)] -> Maybe JValue
-searchValue _ [] = Nothing
 searchValue toFind xs = case xs of
   ((key, value) : rest) ->
     if key == toFind
     then Just value
     else searchValue toFind rest
+  [] -> Nothing
 
 extractString :: JValue -> Maybe String
 extractString = \case
@@ -167,14 +163,3 @@ jValueToTransition (JObject jvalue) key =
     pure $ Map.fromList transition
 
 jValueToTransition _ _ = Nothing
--- parseIntoTDesc :: String -> Maybe TDesc
--- parseIntoTDesc xs = 
---   case json ofg
---     [(v,"")] -> 
---     _ -> Nothing
---   where
---     json = parse jValue xs
--- -- extractString :: String -> [(String, JValue)] -> Maybe String
--- -- extractString find xs = extractValue find xs >>= \case
--- --   JString x -> Just x
--- --   _ -> Nothing
